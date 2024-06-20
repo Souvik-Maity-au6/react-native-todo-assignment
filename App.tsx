@@ -1,103 +1,111 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
- * @format
- */
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import {GoogleSignin} from '@react-native-google-signin/google-signin';
+import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
+import {NavigationContainer} from '@react-navigation/native';
+import {createNativeStackNavigator} from '@react-navigation/native-stack';
+import * as React from 'react';
+import RNBootSplash from 'react-native-bootsplash';
+// App.jsx
+import Toast from 'react-native-toast-message';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 
-import React, {useEffect} from 'react';
-import {
-  Button,
-  SafeAreaView,
-  ScrollView,
-  StatusBar,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-  useColorScheme,
-} from 'react-native';
+import LoginScreen from './src/screens/Login';
+import ProfileScreen from './src/screens/Profile';
+import TodoScreen from './src/screens/Todo';
+import {ThemeProvider, useTheme} from './ThemeContext';
 
-import {Colors} from 'react-native/Libraries/NewAppScreen';
-import {addTodoItem, getTodoItems} from './helper';
+const Tab = createBottomTabNavigator();
+const Stack = createNativeStackNavigator();
 
-function App(): JSX.Element {
-  const isDarkMode = useColorScheme() === 'dark';
-
-  const backgroundStyle = {
-    backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
-  };
-  const [todoItems, setTodoItems] = React.useState([]);
-  const [newTodoItem, setNewTodoItem] = React.useState('');
-  useEffect(() => {
-    getTodoItems(0, 10).then(items => setTodoItems(items));
-  }, []);
-
+function HomeTabs() {
+  const {theme} = useTheme();
   return (
-    <SafeAreaView style={backgroundStyle}>
-      <StatusBar
-        barStyle={isDarkMode ? 'light-content' : 'dark-content'}
-        backgroundColor={backgroundStyle.backgroundColor}
+    <Tab.Navigator
+      screenOptions={({route}: any) => ({
+        tabBarIcon: ({focused, color, size}: any) => {
+          let iconName: string = '';
+
+          if (route.name === 'Todo') {
+            iconName = focused ? 'home' : 'home-outline';
+          } else if (route.name === 'Settings') {
+            iconName = focused ? 'settings-sharp' : 'settings-outline';
+          }
+
+          // You can return any component that you like here!
+          return <Ionicons name={iconName} size={size} color={color} />;
+        },
+        tabBarActiveTintColor: 'blue',
+        tabBarInactiveTintColor: 'gray',
+        tabBarHideOnKeyboard: true,
+        tabBarStyle: {
+          backgroundColor: theme.background,
+        },
+      })}
+      backBehavior={'none'}>
+      <Tab.Screen
+        name="Todo"
+        component={TodoScreen}
+        options={{headerShown: false}}
       />
-      <ScrollView
-        contentInsetAdjustmentBehavior="automatic"
-        style={backgroundStyle}>
-        <View style={styles.sectionContainer}>
-          <Text style={styles.sectionTitle}>TODO</Text>
-        </View>
-        <View style={styles.sectionContainer}>
-          {todoItems.map((item: any) => (
-            <View key={item.id} style={styles.todoItem}>
-              <Text style={styles.sectionDescription}>{item.title}</Text>
-            </View>
-          ))}
-        </View>
-        <View style={styles.sectionContainer}>
-          <TextInput
-            style={styles.sectionDescription}
-            placeholder="Add your todo item"
-            onChange={e => setNewTodoItem(e.nativeEvent.text)}
-          />
-          <Button
-            title="Add"
-            onPress={() => {
-              addTodoItem(newTodoItem).then(() => {
-                getTodoItems(0, 10).then(items => {
-                  setTodoItems(items);
-                });
-              });
-            }}
-          />
-        </View>
-      </ScrollView>
-    </SafeAreaView>
+      <Tab.Screen
+        name="Settings"
+        component={ProfileScreen}
+        options={{headerShown: false}}
+      />
+    </Tab.Navigator>
   );
 }
 
-const styles = StyleSheet.create({
-  sectionContainer: {
-    marginTop: 32,
-    paddingHorizontal: 24,
-  },
-  sectionTitle: {
-    fontSize: 24,
-    fontWeight: '600',
-  },
-  sectionDescription: {
-    marginTop: 8,
-    fontSize: 18,
-    fontWeight: '400',
-  },
-  highlight: {
-    fontWeight: '700',
-  },
-  todoItem: {
-    fontSize: 18,
-    fontWeight: '400',
-    borderBottomWidth: 1,
-    padding: 8,
-    borderBottomColor: 'gray',
-  },
-});
+export default function App() {
+  const [user, setUser] = React.useState<any>(null);
+  const [isLoading, setLoading] = React.useState<boolean>(false);
+  React.useEffect(() => {
+    const init = async () => {
+      // …do multiple sync or async tasks
+      //await getUserData();
+      await getCurrentUser();
+    };
 
-export default App;
+    init().finally(async () => {
+      await RNBootSplash.hide({fade: true});
+    });
+  }, []);
+
+  const getCurrentUser = async () => {
+    setLoading(true);
+    const currentUser = GoogleSignin.getCurrentUser();
+    if (currentUser) {
+      setUser(currentUser);
+      await AsyncStorage.setItem(
+        'userProfile',
+        JSON.stringify(currentUser.user),
+      );
+    } else {
+      await AsyncStorage.removeItem('userProfile');
+    }
+  };
+
+  return isLoading ? (
+    <>
+      <ThemeProvider>
+        <NavigationContainer>
+          <Stack.Navigator initialRouteName={user ? 'Home' : 'Login'}>
+            <Stack.Screen
+              name="Home"
+              component={HomeTabs}
+              options={{headerShown: false}}
+            />
+            <Stack.Screen
+              name="Login"
+              component={LoginScreen}
+              options={{title: 'Login'}}
+            />
+          </Stack.Navigator>
+        </NavigationContainer>
+        <Toast />
+      </ThemeProvider>
+    </>
+  ) : (
+    <NavigationContainer>{''}</NavigationContainer>
+  );
+}

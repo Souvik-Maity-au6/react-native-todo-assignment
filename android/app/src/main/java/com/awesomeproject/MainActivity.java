@@ -1,10 +1,10 @@
-package com.awesomeproject;
-
+package dev.scopex.todo;
+import android.os.Bundle;
 import com.facebook.react.ReactActivity;
 import com.facebook.react.ReactActivityDelegate;
 import com.facebook.react.defaults.DefaultNewArchitectureEntryPoint;
 import com.facebook.react.defaults.DefaultReactActivityDelegate;
-
+import com.zoontek.rnbootsplash.RNBootSplash;
 public class MainActivity extends ReactActivity {
 
   /**
@@ -15,6 +15,14 @@ public class MainActivity extends ReactActivity {
   protected String getMainComponentName() {
     return "AwesomeProject";
   }
+
+
+  //react-native-screens override
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+      RNBootSplash.init(this, R.style.BootTheme); // ⬅️ initialize the splash screen
+        super.onCreate(null);
+    }
 
   /**
    * Returns the instance of the {@link ReactActivityDelegate}. Here we use a util class {@link

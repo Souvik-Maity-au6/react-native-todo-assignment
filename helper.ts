@@ -15,9 +15,9 @@ export async function getTodoItems(
 ): Promise<TodoItem[]> {
   await wait(200);
   //   Throw random error
-  if (Math.random() < 0.2) {
-    throw new Error('Random error');
-  }
+  // if (Math.random() < 0.2) {
+  //   throw new Error('Random error');
+  // }
   const todoItems = JSON.parse(
     (await AsyncStorage.getItem('todoItems')) || '[]',
   );
