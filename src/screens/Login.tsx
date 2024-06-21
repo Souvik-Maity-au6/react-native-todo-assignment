@@ -21,8 +21,7 @@ import ButtonComponent from '../components/ButtonComponent';
 import {showToast} from '../components/Toast';
 
 GoogleSignin.configure({
-  webClientId:
-    '235525488079-st6lr3d9aitj1er2shc0an4l2btgh0gl.apps.googleusercontent.com', // client ID of type WEB for your server. Required to get the `idToken` on the user object, and for offline access.
+  webClientId: '', // client ID of type WEB for your server. Required to get the `idToken` on the user object, and for offline access.
   scopes: [
     'https://www.googleapis.com/auth/drive.readonly',
     'https://www.googleapis.com/auth/contacts.readonly',
